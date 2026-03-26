@@ -34,3 +34,96 @@ def test_create_choice():
     assert len(question.choices) == 1
     assert choice.text == 'a'
     assert not choice.is_correct
+
+
+def test_add_multiple_choices_assigns_incremental_ids():
+    question = Question(title='q1')
+
+    first = question.add_choice('a')
+    second = question.add_choice('b')
+
+    assert first.id == 1
+    assert second.id == 2
+
+
+def test_add_choice_with_empty_text_raises_error():
+    question = Question(title='q1')
+
+    with pytest.raises(Exception):
+        question.add_choice('')
+
+
+def test_add_choice_with_text_longer_than_100_chars_raises_error():
+    question = Question(title='q1')
+
+    with pytest.raises(Exception):
+        question.add_choice('a' * 101)
+
+
+def test_remove_choice_by_id_removes_only_target_choice():
+    question = Question(title='q1')
+    first = question.add_choice('a')
+    second = question.add_choice('b')
+
+    question.remove_choice_by_id(first.id)
+
+    assert len(question.choices) == 1
+    assert question.choices[0].id == second.id
+
+
+def test_remove_choice_by_id_with_invalid_id_raises_error():
+    question = Question(title='q1')
+    question.add_choice('a')
+
+    with pytest.raises(Exception):
+        question.remove_choice_by_id(999)
+
+
+def test_remove_all_choices_clears_all_choices():
+    question = Question(title='q1')
+    question.add_choice('a')
+    question.add_choice('b')
+
+    question.remove_all_choices()
+
+    assert question.choices == []
+
+
+def test_set_correct_choices_marks_only_selected_choices_as_correct():
+    question = Question(title='q1')
+    first = question.add_choice('a')
+    second = question.add_choice('b')
+
+    question.set_correct_choices([second.id])
+
+    assert not first.is_correct
+    assert second.is_correct
+
+
+def test_set_correct_choices_with_invalid_id_raises_error():
+    question = Question(title='q1')
+    question.add_choice('a')
+
+    with pytest.raises(Exception):
+        question.set_correct_choices([999])
+
+
+def test_correct_selected_choices_returns_only_selected_correct_ids():
+    question = Question(title='q1', max_selections=2)
+    first = question.add_choice('a', is_correct=True)
+    second = question.add_choice('b', is_correct=False)
+    third = question.add_choice('c', is_correct=True)
+
+    corrected = question.correct_selected_choices([first.id, second.id])
+
+    assert corrected == [first.id]
+    assert third.id not in corrected
+
+
+def test_correct_selected_choices_above_max_selections_raises_error():
+    question = Question(title='q1', max_selections=1)
+    first = question.add_choice('a', is_correct=True)
+    second = question.add_choice('b', is_correct=False)
+
+    with pytest.raises(Exception):
+        question.correct_selected_choices([first.id, second.id])
