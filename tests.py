@@ -127,3 +127,29 @@ def test_correct_selected_choices_above_max_selections_raises_error():
 
     with pytest.raises(Exception):
         question.correct_selected_choices([first.id, second.id])
+
+
+@pytest.fixture
+def question_with_multiple_choices():
+    question = Question(title='q1', max_selections=2)
+    first = question.add_choice('a', is_correct=True)
+    second = question.add_choice('b', is_correct=False)
+    third = question.add_choice('c', is_correct=False)
+    return question, first, second, third
+
+
+def test_fixture_based_correction_with_no_selection_returns_empty_list(question_with_multiple_choices):
+    question, _, _, _ = question_with_multiple_choices
+
+    corrected = question.correct_selected_choices([])
+
+    assert corrected == []
+
+
+def test_fixture_based_set_correct_choices_accumulates_correct_answers(question_with_multiple_choices):
+    question, first, second, _ = question_with_multiple_choices
+
+    question.set_correct_choices([second.id])
+    corrected = question.correct_selected_choices([first.id, second.id])
+
+    assert corrected == [first.id, second.id]
